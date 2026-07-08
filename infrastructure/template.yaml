@@ -1,0 +1,290 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  drone-inspection-backend
+
+  Production-grade serverless backend for a Drone Inspection Platform, implementing Clean
+  Architecture, a Single-Table DynamoDB schema, Event Timeline audit logging, and idempotent creation APIs.
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: python3.11
+    Architectures:
+      - x86_64
+    Tracing: Active
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref DroneInspectionTable
+        BUCKET_NAME: !Ref DroneInspectionBucket
+        AWS_REGION: !Ref AWS::Region
+        URL_EXPIRY: "900"
+
+Resources:
+  # DynamoDB Single Table
+  DroneInspectionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DroneInspectionTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: InvertedIndex
+          KeySchema:
+            - AttributeName: SK
+              KeyType: HASH
+            - AttributeName: PK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  # S3 Bucket for Drone Inspections Images
+  DroneInspectionBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub drone-inspection-bucket-${AWS::AccountId}-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  # Lambda Functions
+  CreateInspectionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.create_inspection.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/inspections
+            Method: post
+
+  ListWarehouseInspectionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.list_warehouse_inspections.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/warehouses/{id}/inspections
+            Method: get
+
+  ListDroneInspectionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.list_drone_inspections.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/drones/{id}/inspections
+            Method: get
+
+  GenerateUploadUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.generate_upload_url.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+        - S3CrudPolicy:
+            BucketName: !Ref DroneInspectionBucket
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/inspections/{id}/upload-url
+            Method: post
+
+  CompleteUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.complete_upload.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+        - S3CrudPolicy:
+            BucketName: !Ref DroneInspectionBucket
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/inspections/{id}/images/{image_id}/complete
+            Method: post
+
+  ListInspectionImagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.list_inspection_images.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/inspections/{id}/images
+            Method: get
+
+  ListInspectionTimelineFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.list_inspection_timeline.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/inspections/{id}/timeline
+            Method: get
+
+  GetInspectionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.get_inspection.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/inspections/{id}
+            Method: get
+
+  GetInspectionGraphFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.get_inspection_graph.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/inspections/{id}/graph
+            Method: get
+
+  ReplayInspectionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.replay_inspection.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/inspections/{id}/replay
+            Method: get
+
+  ExplainQueryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.explain_query.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/inspections/{id}/explain
+            Method: get
+
+  DigitalTwinFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.digital_twin.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/warehouses/{id}/digital-twin
+            Method: get
+
+  PredictiveCapacityFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: src.handlers.predictive_capacity.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DroneInspectionTable
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /v1/warehouses/{id}/predictive-capacity
+            Method: get
+
+Outputs:
+  HttpApiUrl:
+    Description: "Base URL of HTTP API Gateway endpoint"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  TableArn:
+    Description: "ARN of the Single-Table DynamoDB"
+    Value: !GetAtt DroneInspectionTable.Arn
+  BucketArn:
+    Description: "ARN of the S3 bucket"
+    Value: !GetAtt DroneInspectionBucket.Arn
