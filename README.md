@@ -214,6 +214,12 @@ Timeline/audit events for an inspection are chained using a SHA-256 hash. The ha
   $$Hash = SHA256(event\_id \parallel inspection\_id \parallel event\_type \parallel timestamp \parallel payload\_json \parallel previous\_hash)$$
 This guarantees tamper-evidence. Any modifications to intermediate log payloads break the hash chain integrity.
 
+### 5. Cloud-Native Telemetry (AWS Powertools, X-Ray & EMF)
+The platform implements production-grade cloud observability and business activity monitoring:
+- **Active X-Ray Tracing**: Enabled globally across all API lambdas (`Tracing: Active` in `template.yaml`). Handlers utilize Powertools `@tracer.capture_lambda_handler` to record distributed trace spans.
+- **Structured Contextual Logging**: Decorated with `@logger.inject_lambda_context(clear_state=True)` to structure JSON logging, capture cold starts, and log correlation IDs.
+- **CloudWatch EMF (Embedded Metrics)**: Publishes key operational indicators without API overhead. Custom metrics tracked include `InspectionCreated`, `PresignedURLRequests`, `ImageUploads`, `UploadLatency` (duration in milliseconds), and `Errors` (automatically captured by the centralized handler wrapper).
+
 ---
 
 ## 💎 Production Grade Standouts
