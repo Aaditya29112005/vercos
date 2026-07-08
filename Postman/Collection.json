@@ -1,0 +1,298 @@
+{
+  "info": {
+    "name": "Drone Inspection Platform API Collection",
+    "description": "Postman collection covering all core endpoints and advanced SaaS features of the Drone Inspection platform.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Create Inspection (Idempotent)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Idempotency-Key",
+            "value": "7b5ef970-8e12-4212-9c12-32ba19e8cf12",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"organization_id\": \"{{organization_id}}\",\n  \"warehouse_id\": \"{{warehouse_id}}\",\n  \"drone_id\": \"{{drone_id}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/inspections",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "inspections"
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Get Inspection (Time-Travel)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/inspections/{{inspection_id}}?version=1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "inspections",
+            "{{inspection_id}}"
+          ],
+          "query": [
+            {
+              "key": "version",
+              "value": "1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Request S3 Pre-signed Upload URL",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"file_size\": 10240,\n  \"content_type\": \"image/png\",\n  \"checksum\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/inspections/{{inspection_id}}/upload-url",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "inspections",
+            "{{inspection_id}}",
+            "upload-url"
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Complete Image Upload Webhook",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"width\": 1920,\n  \"height\": 1080\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/inspections/{{inspection_id}}/images/{{image_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "inspections",
+            "{{inspection_id}}",
+            "images",
+            "{{image_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. List Images for Inspection",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/inspections/{{inspection_id}}/images",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "inspections",
+            "{{inspection_id}}",
+            "images"
+          ]
+        }
+      }
+    },
+    {
+      "name": "6. List Inspections by Warehouse",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/warehouses/{{warehouse_id}}/inspections?limit=10",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "warehouses",
+            "{{warehouse_id}}",
+            "inspections"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "7. List Inspections by Drone",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/drones/{{drone_id}}/inspections?limit=10",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "drones",
+            "{{drone_id}}",
+            "inspections"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "8. Get Inspection Knowledge Graph",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/inspections/{{inspection_id}}/graph",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "inspections",
+            "{{inspection_id}}",
+            "graph"
+          ]
+        }
+      }
+    },
+    {
+      "name": "9. Get Inspection Replay Log",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/inspections/{{inspection_id}}/replay",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "inspections",
+            "{{inspection_id}}",
+            "replay"
+          ]
+        }
+      }
+    },
+    {
+      "name": "10. Get Database Explain details",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/inspections/{{inspection_id}}/explain",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "inspections",
+            "{{inspection_id}}",
+            "explain"
+          ]
+        }
+      }
+    },
+    {
+      "name": "11. Get Warehouse Digital Twin Representation",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/warehouses/{{warehouse_id}}/digital-twin?organization_id={{organization_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "warehouses",
+            "{{warehouse_id}}",
+            "digital-twin"
+          ],
+          "query": [
+            {
+              "key": "organization_id",
+              "value": "{{organization_id}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "12. Get Warehouse 30-Day Storage Projection",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/warehouses/{{warehouse_id}}/predictive-capacity?organization_id={{organization_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "warehouses",
+            "{{warehouse_id}}",
+            "predictive-capacity"
+          ],
+          "query": [
+            {
+              "key": "organization_id",
+              "value": "{{organization_id}}"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "name": "Drone Platform Local & Dev Environment",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "text",
+      "enabled": true
+    },
+    {
+      "key": "organization_id",
+      "value": "ORG-VECROS-INC",
+      "type": "text",
+      "enabled": true
+    },
+    {
+      "key": "warehouse_id",
+      "value": "2e4a1cd3-6396-491f-9abb-d1f88d62f7c9",
+      "type": "text",
+      "enabled": true
+    },
+    {
+      "key": "drone_id",
+      "value": "24b62559-c98a-4c24-b833-b9950355472e",
+      "type": "text",
+      "enabled": true
+    },
+    {
+      "key": "inspection_id",
+      "value": "d340e5bd-3061-4d13-a5f3-92e08cd97985",
+      "type": "text",
+      "enabled": true
+    },
+    {
+      "key": "image_id",
+      "value": "a043eee1-dae7-4396-90d1-5cfff3c13362",
+      "type": "text",
+      "enabled": true
+    }
+  ]
+}
