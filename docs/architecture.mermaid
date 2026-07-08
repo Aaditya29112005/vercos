@@ -1,0 +1,23 @@
+graph TD
+    User([HTTP Client / Postman]) -->|HTTP Requests /v1| APIGW[API Gateway HttpApi]
+    
+    subgraph AWS Lambda Layers
+        APIGW -->|Route Requests| Handlers[Lambda Handlers]
+        Handlers -->|Validation / Pydantic| Models[Pydantic Models]
+        Handlers -->|Orchestration| Services[Service Layer]
+        Services -->|Query / Save Data| Repos[Repository Layer]
+    end
+
+    subgraph Data & Storage Layer
+        Repos -->|boto3 DynamoDB resource| DynamoDB[(DynamoDB Single Table)]
+        Repos -->|boto3 S3 client| S3[("S3 Private Bucket\n(Image Storage)")]
+    end
+    
+    %% Styling
+    style User fill:#d4ebf2,stroke:#333,stroke-width:2px;
+    style APIGW fill:#ffc966,stroke:#e68a00,stroke-width:2px;
+    style Handlers fill:#f9e6ff,stroke:#cc33ff,stroke-width:2px;
+    style Services fill:#e6ffe6,stroke:#00cc44,stroke-width:2px;
+    style Repos fill:#e6f2ff,stroke:#3385ff,stroke-width:2px;
+    style DynamoDB fill:#ffe6e6,stroke:#ff3333,stroke-width:2px;
+    style S3 fill:#ffe6e6,stroke:#ff3333,stroke-width:2px;

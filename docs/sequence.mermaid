@@ -1,0 +1,73 @@
+sequenceDiagram
+    autonumber
+    actor Client as Client App
+    participant APIGW as API Gateway
+    participant Handler as Lambda Handler
+    participant Service as Service Layer
+    participant Repo as Repository Layer
+    participant DynamoDB as DynamoDB (Single Table)
+    participant S3 as S3 Private Bucket
+
+    %% Idempotent Create Inspection
+    rect rgb(230, 242, 255)
+        Note over Client, DynamoDB: Idempotent Create Inspection Workflow
+        Client->>APIGW: POST /v1/inspections (Headers: Idempotency-Key)
+        APIGW->>Handler: Invoke create_inspection.py
+        Handler->>Service: create_inspection(w_id, d_id, idempotency_key)
+        Service->>Repo: check_and_lock_idempotency(key)
+        Repo->>DynamoDB: PutItem (status=IN_PROGRESS)
+        alt New Idempotency Key
+            DynamoDB-->>Repo: Success
+            Service->>Repo: Get Warehouse & Drone Details
+            Repo->>DynamoDB: GetItem (Warehouse/Drone)
+            DynamoDB-->>Repo: Meta data
+            Service->>Repo: create_inspection()
+            Repo->>DynamoDB: PutItem (Inspection)
+            Service->>Repo: create_event()
+            Repo->>DynamoDB: PutItem (Event: InspectionCreated)
+            Service->>Repo: update_idempotency_result(key, response)
+            Repo->>DynamoDB: UpdateItem (status=COMPLETED, response)
+            Service-->>Handler: Inspection Data
+            Handler-->>APIGW: 201 Created Response
+            APIGW-->>Client: 201 Standard JSON
+        else Reused Idempotency Key (COMPLETED)
+            DynamoDB-->>Repo: ConditionalCheckFailed (Returns status=COMPLETED, Response)
+            Service-->>Handler: Cached Response Data
+            Handler-->>APIGW: 201 Created Response
+            APIGW-->>Client: 201 Standard JSON
+        end
+    end
+
+    %% Image Upload & Webhook Lifecycle
+    rect rgb(242, 230, 255)
+        Note over Client, S3: S3 Pre-signed URL + TTL Tracking Workflow
+        Client->>APIGW: POST /v1/inspections/{id}/upload-url (Size, Content-Type, Checksum)
+        APIGW->>Handler: Invoke generate_upload_url.py
+        Handler->>Service: generate_upload_url(id, size, mime, chk)
+        Service->>Repo: generate_presigned_url()
+        Repo->>S3: Generate Signature (Expires: 15 mins)
+        S3-->>Repo: Presigned PUT URL
+        Service->>Repo: save_image_upload(Image, status=PENDING, TTL=15mins)
+        Repo->>DynamoDB: PutItem (Image with ttl)
+        Service->>Repo: create_event()
+        Repo->>DynamoDB: PutItem (Event: UploadURLGenerated)
+        Service-->>Handler: URL + metadata
+        Handler-->>APIGW: 200 OK
+        APIGW-->>Client: 200 OK (Presigned URL)
+        
+        Client->>S3: HTTP PUT to Presigned URL (Binary File Payload)
+        S3-->>Client: 200 OK (S3 Saved)
+        
+        Client->>APIGW: POST /v1/inspections/{id}/images/{image_id}/complete (Width, Height)
+        APIGW->>Handler: Invoke complete_upload.py
+        Handler->>Service: complete_upload(id, image_id, w, h)
+        Service->>Repo: update_image_upload_complete()
+        Repo->>DynamoDB: UpdateItem (status=UPLOADED, REMOVE ttl)
+        Service->>Repo: create_event()
+        Repo->>DynamoDB: PutItem (Event: ImageUploaded)
+        Service->>Repo: update_inspection_status(status=PROCESSING)
+        Repo->>DynamoDB: UpdateItem (Inspection status, ver=ver+1)
+        Service-->>Handler: Complete status
+        Handler-->>APIGW: 200 OK
+        APIGW-->>Client: 200 OK (Status Completed)
+    end
