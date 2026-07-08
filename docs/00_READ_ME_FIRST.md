@@ -1,5 +1,5 @@
 # Executive Summary - Drone Inspection Platform Backend
-**Submission Document: 00_READ_ME_FIRST.pdf**
+**Submission Document: overview.pdf**
 
 ---
 
@@ -51,52 +51,4 @@ A production-grade, highly-scalable serverless backend built to manage drone ins
 
 ---
 
-## 📁 Google Drive Contents Map
 
-```text
-📁 Aaditya Mohan Samadhiya - VECROS SDE Backend Assessment/
-│
-├── 📄 00_READ_ME_FIRST.pdf           # This Executive Summary document
-├── 📄 01_Project_Overview.pdf         # Detailed business/domain logic and feature lists
-├── 📄 02_Architecture.pdf             # Architecture, sequence, and system data flows
-├── 📄 03_DynamoDB_Design.pdf          # Single-Table schemas, index keys, and access query matrix
-├── 📄 04_API_Documentation.pdf         # HTTP endpoint specifications and payload samples
-├── 📄 05_Deployment_Guide.pdf          # Step-by-step local deployment instructions
-├── 📄 06_Engineering_Decisions.pdf     # In-depth architectural trade-offs and rationale
-├── 📄 07_Test_Report.pdf               # pytest output and test coverage report (81% coverage)
-├── 📄 08_Performance_Notes.pdf         # Index lookup plans, CPU constraints, and storage optimizations
-├── 📄 Resume.pdf                      # Candidate resume (PDF)
-│
-├── 📁 Demo/
-│   ├── 🎥 Demo.mp4                    # 3-minute video walk-through demonstrating features
-│   └── 📄 Demo-Script.pdf             # Script walk-through guide of the demonstration
-│
-├── 📁 Screenshots/                    # Console screen captures showing active AWS setups
-│   ├── API Gateway.png
-│   ├── Lambda Functions.png
-│   ├── DynamoDB Table.png
-│   ├── S3 Bucket.png
-│   ├── IAM Roles.png
-│   ├── CloudWatch Logs.png
-│   ├── Postman Tests.png
-│   └── Upload Flow.png
-│
-├── 📁 Postman/                        # Postman configuration files for reviewers
-│   ├── Collection.json
-│   └── Environment.json
-│
-├── 📁 Source Code/
-│   └── aegis-inspect.zip             # Zip folder containing the source repository (excl. .git)
-│
-└── 📁 Diagrams/                       # Exported images of system architecture
-    ├── Architecture.png
-    ├── Sequence Diagram.png
-    ├── ER Diagram.png
-    ├── DynamoDB Access Patterns.png
-    └── AWS Architecture.png
-```
-
----
-
-## 🎥 Demo Video Link
-* **Google Drive Link**: `[Insert Google Drive Video Link Here after uploading Demo.mp4]`
